@@ -3,800 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preferred Stocks Correlation Matrix - Alpha Vantage</title>
+    <title>Preferred Stocks Correlation Matrix</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
-            min-height: 100vh;
-        }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; margin-bottom: 40px; }
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #00d4ff, #00ff88);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .header p { font-size: 1.1em; color: #b8c5d6; }
-        .controls, .api-setup, .matrix-container, .info-panel {
-            background: rgba(255, 255, 255, 0.07);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        .control-row { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-        .control-group { display: flex; flex-direction: column; gap: 8px; }
-        label { font-weight: 600; color: #e0e6ed; font-size: 0.9em; }
-        select, input {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.2);
-            color: white;
-            font-size: 14px;
-            min-width: 150px;
-        }
-        select:focus, input:focus { outline: none; box-shadow: 0 0 0 2px #00d4ff; }
-        .btn {
-            padding: 12px 25px;
-            background: linear-gradient(45deg, #00d4ff, #00ff88);
-            border: none;
-            border-radius: 8px;
-            color: #1a1a2e;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-        .matrix-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .matrix-table th, .matrix-table td { padding: 12px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.1); font-weight: 500; }
-        .matrix-table th { background: linear-gradient(45deg, #00d4ff22, #00ff8822); }
-        .correlation-cell { font-weight: 600; border-radius: 6px; transition: all 0.3s ease; cursor: pointer; }
-        .correlation-cell:hover { transform: scale(1.1); z-index: 10; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); }
-        .legend { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.9em; }
-        .legend-color { width: 20px; height: 20px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.3); }
-        .loading { text-align: center; padding: 40px; font-size: 1.2em; color: #b8c5d6; }
-        .error, .success { padding: 15px; border-radius: 8px; margin: 20px 0; }
-        .error { background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 0, 0, 0.3); color: #ff6b6b; }
-        .success { background: rgba(0, 255, 0, 0.1); border: 1px solid rgba(0, 255, 0, 0.3); color: #00ff88; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
-        .stat-card { background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 10px; text-align: center; }
-        .stat-value { font-size: 1.5em; font-weight: bold; margin-bottom: 5px; }
-        .stat-label { font-size: 0.9em; color: #b8c5d6; }
-        .api-status { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
-        .status-online { background-color: #00ff88; }
-        .status-offline { background-color: #ff4757; }
-        .status-loading { background-color: #fdcb6e; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-        /* API Key Input Styling */
-        .api-key-section {
-            background: rgba(255, 215, 0, 0.1);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .api-key-input {
-            width: 300px;
-            margin-right: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        /* Analiz Paneli Stilleri */
-        #pairAnalysisContainer {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr;
-            gap: 25px;
-            align-items: flex-start;
-            margin-top: 20px;
-        }
-        .price-chart-container svg { width: 100%; height: auto; border-radius: 8px; background: rgba(0,0,0,0.2); }
-        .stock-details-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .details-column h5 {
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-            padding-bottom: 10px;
-            border-bottom: 2px solid;
-        }
-        .details-column .detail-item {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9em;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .detail-item .label { color: #b8c5d6; }
-        .detail-item .value { font-weight: bold; }
-        .loading-spinner {
-            border: 4px solid rgba(255,255,255,0.2);
-            border-left-color: #00d4ff;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 992px) {
-            #pairAnalysisContainer { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 768px) {
-            .control-row { flex-direction: column; align-items: stretch; }
-            .stock-details-container { grid-template-columns: 1fr; }
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        .error { color: red; }
+        .success { color: green; }
+        button, select, input { margin: 5px; padding: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .correlation-cell:hover { cursor: pointer; background-color: #e0e0e0; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Preferred Stocks Correlation Matrix</h1>
-            <p>Real-time correlation analysis powered by Alpha Vantage API</p>
+        <h1>Preferred Stocks Correlation Matrix</h1>
+        <p>Real-time correlation analysis powered by Alpha Vantage API</p>
+
+        <div>
+            <h2>Alpha Vantage API Configuration</h2>
+            <label for="api-key">🔑 API Key Required</label><br>
+            <input type="text" id="api-key" placeholder="Enter your Alpha Vantage API key">
+            <a href="https://www.alphavantage.co/support/#api-key" target="_blank">Get your free API key</a><br>
+            <button id="activate-api">🔓 Activate API</button>
         </div>
 
-        <div class="api-setup">
-            <h3 style="color: #00ff88; margin-bottom: 15px;">
-                <span class="api-status status-offline" id="apiStatus"></span>
-                Alpha Vantage API Configuration
-            </h3>
-            
-            <div class="api-key-section">
-                <h4 style="color: #ffd700; margin-bottom: 10px;">🔑 API Key Required</h4>
-                <p style="margin-bottom: 15px; color: #b8c5d6;">
-                    Get your free API key from <a href="https://www.alphavantage.co/support/#api-key" target="_blank" style="color: #00d4ff;">Alpha Vantage</a>
-                </p>
-                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <input type="password" id="apiKeyInput" class="api-key-input" placeholder="Enter your Alpha Vantage API key">
-                    <button class="btn" onclick="setApiKey()">🔓 Activate API</button>
-                </div>
-            </div>
-            
-            <div class="api-input">
-                <button class="btn" onclick="useRealData()" id="realDataBtn" disabled>🚀 Use Real Market Data</button>
-                <button class="btn" onclick="useDemoData()" style="background: linear-gradient(45deg, #6c5ce7, #fd79a8);">📊 Use Demo Data</button>
-            </div>
-            <div id="apiMessage" style="margin-top:15px;"></div>
+        <div>
+            <h2>Data Source</h2>
+            <button id="real-data">🚀 Use Real Market Data</button>
+            <button id="demo-data">📊 Use Demo Data</button>
         </div>
 
-        <div class="controls">
-            <div class="control-row">
-                <div class="control-group">
-                    <label>Time Period</label>
-                    <select id="timePeriod">
-                        <option value="30">30 Days</option>
-                        <option value="60" selected>60 Days</option>
-                        <option value="90">90 Days</option>
-                        <option value="180">6 Months</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label>Custom Ticker</label>
-                    <input type="text" id="customTicker" placeholder="e.g., BAC-PK">
-                </div>
-                <button class="btn" onclick="addCustomStock()">Add Stock</button>
-                <button class="btn" id="refreshBtn" onclick="refreshMatrix()" disabled>Refresh Data</button>
-            </div>
+        <div>
+            <h2>Stock Selection</h2>
+            <label for="time-period">Time Period</label>
+            <select id="time-period">
+                <option value="30">30 Days</option>
+                <option value="60">60 Days</option>
+                <option value="90">90 Days</option>
+                <option value="180">6 Months</option>
+            </select><br>
+            <label for="ticker-input">Custom Ticker</label>
+            <input type="text" id="ticker-input" placeholder="e.g. BAC-P-A, MSFT">
+            <button id="add-stock">Add Stock</button>
+            <button id="refresh-data">Refresh Data</button>
+            <p id="ticker-error" class="error"></p>
         </div>
 
-        <div class="matrix-container">
-            <div class="legend">
-                <div class="legend-item"><div class="legend-color" style="background: #ff4757;"></div><span>Strong Neg</span></div>
-                <div class="legend-item"><div class="legend-color" style="background: #ff7675;"></div><span>Mod. Neg</span></div>
-                <div class="legend-item"><div class="legend-color" style="background: #fdcb6e;"></div><span>Weak</span></div>
-                <div class="legend-item"><div class="legend-color" style="background: #6c5ce7;"></div><span>Mod. Pos</span></div>
-                <div class="legend-item"><div class="legend-color" style="background: #00b894;"></div><span>Strong Pos</span></div>
-            </div>
-            <div id="matrixContent">
-                <div class="loading">Enter your Alpha Vantage API key and select data source to start...</div>
-            </div>
+        <div>
+            <h2>Correlation Matrix</h2>
+            <p>Strong Neg | Mod. Neg | Weak | Mod. Pos | Strong Pos</p>
+            <p id="status">Enter your Alpha Vantage API key and select data source to start...</p>
+            <table id="correlation-table"></table>
         </div>
 
-        <div class="info-panel">
-            <h3 style="color: #00d4ff;">Market Statistics</h3>
-            <div class="stats" id="statsContainer"></div>
-            <div style="margin-top: 25px;">
-                <h4 style="color: #00ff88; margin-bottom: 10px;">Selected Pair Analysis</h4>
-                <div id="pairAnalysis" style="color: #b8c5d6;">Click on a cell to see detailed analysis and financial data.</div>
-            </div>
+        <div>
+            <h2>Market Statistics</h2>
+            <div id="pair-analysis">Click on a cell to see detailed analysis and financial data.</div>
         </div>
     </div>
 
-<script>
-// --- App State ---
-const appState = {
-    useDemo: false,
-    isApiReady: false,
-    apiKey: null,
-    correlationMatrix: {},
-    stockDataCache: {},
-    stockDetailsCache: {},
-    preferredStocks: ['BAC-PK', 'JPM-PC', 'WFC-PQ', 'C-PN', 'GS-PK', 'MS-PI', 'USB-PH', 'PNC-PP'],
-    requestCount: 0, // API rate limit tracking
-    maxRequestsPerMinute: 5
-};
+    <script>
+        // API ve durum değişkenleri
+        let apiKey = '';
+        let useDemoData = false;
+        let stocks = [];
+        const API_BASE_URL = 'https://www.alphavantage.co/query';
+        const RATE_LIMIT_DELAY = 12000; // 12 saniye (5 istek/dakika için)
 
-// --- Alpha Vantage API Integration ---
-const BASE_URL = "https://www.alphavantage.co/query";
+        // Demo veri örneği
+        const demoData = {
+            'BAC-P-A': { '2023-08-01': 25.5, '2023-08-02': 25.7, /* ... */ },
+            'MSFT': { '2023-08-01': 330.1, '2023-08-02': 328.9, /* ... */ }
+        };
 
-// Rate limiting helper
-function canMakeRequest() {
-    const now = Date.now();
-    // Reset counter every minute
-    if (!appState.lastResetTime || now - appState.lastResetTime > 60000) {
-        appState.requestCount = 0;
-        appState.lastResetTime = now;
-    }
-    return appState.requestCount < appState.maxRequestsPerMinute;
-}
-
-async function fetchAlphaVantageData(params) {
-    if (!canMakeRequest()) {
-        throw new Error('Rate limit reached. Please wait a minute before making more requests.');
-    }
-    
-    appState.requestCount++;
-    const url = `${BASE_URL}?${new URLSearchParams({ ...params, apikey: appState.apiKey })}`;
-    
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        // Check for Alpha Vantage specific errors
-        if (data["Error Message"]) {
-            throw new Error(`Alpha Vantage Error: ${data["Error Message"]}`);
-        }
-        if (data["Note"]) {
-            throw new Error('API call frequency exceeded. Please try again later.');
-        }
-        
-        return data;
-    } catch (error) {
-        console.error('Alpha Vantage API Error:', error);
-        throw error;
-    }
-}
-
-// Fetch daily price data from Alpha Vantage
-async function fetchStockPriceData(symbol, period) {
-    if (appState.useDemo) return generateDemoPriceData(period);
-    
-    try {
-        const data = await fetchAlphaVantageData({
-            function: 'TIME_SERIES_DAILY_ADJUSTED',
-            symbol: symbol,
-            outputsize: 'compact'
-        });
-        
-        if (!data["Time Series (Daily)"]) {
-            console.warn(`No daily data found for ${symbol}`);
-            return null;
-        }
-        
-        const timeSeries = Object.entries(data["Time Series (Daily)"])
-            .map(([date, values]) => ({
-                timestamp: new Date(date).getTime(),
-                price: parseFloat(values["4. close"])
-            }))
-            .sort((a, b) => a.timestamp - b.timestamp)
-            .slice(-period); // Get last X days
-        
-        return timeSeries.length > 5 ? timeSeries : null;
-    } catch (error) {
-        console.warn(`Error fetching Alpha Vantage data for ${symbol}:`, error);
-        return null;
-    }
-}
-
-// Fetch company overview for detailed analysis
-async function fetchStockDetails(symbol) {
-    if (appState.stockDetailsCache[symbol]) return appState.stockDetailsCache[symbol];
-    if (appState.useDemo) return generateDemoDetails(symbol);
-
-    try {
-        const data = await fetchAlphaVantageData({
-            function: 'OVERVIEW',
-            symbol: symbol
-        });
-        
-        if (!data.Symbol) {
-            console.warn(`No overview data found for ${symbol}`);
-            return generateDemoDetails(symbol); // Fallback to demo data
-        }
-        
-        appState.stockDetailsCache[symbol] = data;
-        return data;
-    } catch (error) {
-        console.warn(`Error fetching overview for ${symbol}:`, error);
-        return generateDemoDetails(symbol); // Fallback to demo data
-    }
-}
-
-// --- Calculation Engine ---
-function alignDataForCorrelation(data1, data2) {
-    const map1 = new Map(data1.map(d => [new Date(d.timestamp).toDateString(), d.price]));
-    const alignedPrices1 = [], alignedPrices2 = [];
-    
-    for (const item2 of data2) {
-        const dateString = new Date(item2.timestamp).toDateString();
-        if (map1.has(dateString)) {
-            alignedPrices1.push(map1.get(dateString));
-            alignedPrices2.push(item2.price);
-        }
-    }
-    
-    return { prices1: alignedPrices1, prices2: alignedPrices2 };
-}
-
-function calculateReturns(prices) {
-    const returns = [];
-    for (let i = 1; i < prices.length; i++) {
-        if (prices[i-1] === 0) continue;
-        returns.push((prices[i] - prices[i-1]) / prices[i-1]);
-    }
-    return returns;
-}
-
-function calculateCorrelation(prices1, prices2) {
-    const returns1 = calculateReturns(prices1);
-    const returns2 = calculateReturns(prices2);
-    const n = Math.min(returns1.length, returns2.length);
-    
-    if (n < 2) return 0;
-    
-    const mean1 = returns1.slice(0, n).reduce((a, b) => a + b) / n;
-    const mean2 = returns2.slice(0, n).reduce((a, b) => a + b) / n;
-    
-    let num = 0, den1 = 0, den2 = 0;
-    for (let i = 0; i < n; i++) {
-        const diff1 = returns1[i] - mean1;
-        const diff2 = returns2[i] - mean2;
-        num += diff1 * diff2;
-        den1 += diff1 * diff1;
-        den2 += diff2 * diff2;
-    }
-    
-    const denominator = Math.sqrt(den1 * den2);
-    return denominator === 0 ? 0 : num / denominator;
-}
-
-// --- Core App Logic ---
-async function createCorrelationMatrix() {
-    const period = document.getElementById('timePeriod').value;
-    const stocks = [...appState.preferredStocks];
-    
-    updateApiStatus('loading');
-    document.getElementById('matrixContent').innerHTML = '<div class="loading">Fetching market data from Alpha Vantage...</div>';
-    
-    try {
-        appState.stockDataCache = {};
-        
-        for (let i = 0; i < stocks.length; i++) {
-            const symbol = stocks[i];
-            document.getElementById('matrixContent').innerHTML = 
-                `<div class="loading">📈 Fetching ${symbol}... (${i+1}/${stocks.length})<br>
-                <small>Requests remaining this minute: ${appState.maxRequestsPerMinute - appState.requestCount}</small></div>`;
-            
-            appState.stockDataCache[symbol] = await fetchStockPriceData(symbol, period);
-            
-            // Add delay between requests to respect rate limits
-            if (i < stocks.length - 1 && !appState.useDemo) {
-                await new Promise(resolve => setTimeout(resolve, 12000)); // 12 second delay
+        // API anahtarını aktive et
+        document.getElementById('activate-api').addEventListener('click', () => {
+            apiKey = document.getElementById('api-key').value.trim();
+            if (!apiKey) {
+                updateStatus('Lütfen geçerli bir API anahtarı girin.', 'error');
+                return;
             }
+            updateStatus('API anahtarı aktif edildi!', 'success');
+        });
+
+        // Veri kaynağını seç
+        document.getElementById('real-data').addEventListener('click', () => {
+            useDemoData = false;
+            updateStatus('Gerçek piyasa verileri kullanılıyor...', 'success');
+            fetchData();
+        });
+
+        document.getElementById('demo-data').addEventListener('click', () => {
+            useDemoData = true;
+            updateStatus('Demo veriler kullanılıyor...', 'success');
+            renderCorrelationMatrix(demoData);
+        });
+
+        // Hisse ekle
+        document.getElementById('add-stock').addEventListener('click', () => {
+            const ticker = document.getElementById('ticker-input').value.trim().toUpperCase();
+            if (!isValidTicker(ticker)) {
+                document.getElementById('ticker-error').textContent = 'Geçersiz sembol formatı. Örnek: BAC-P-A, AAPL';
+                return;
+            }
+            if (!stocks.includes(ticker)) {
+                stocks.push(ticker);
+                document.getElementById('ticker-error').textContent = '';
+                updateStatus(`Hisse eklendi: ${ticker}`, 'success');
+                fetchData();
+            }
+        });
+
+        // Verileri yenile
+        document.getElementById('refresh-data').addEventListener('click', fetchData);
+
+        // Ticker formatını doğrula (örn. AAPL veya BAC-P-A)
+        function isValidTicker(ticker) {
+            return /^[A-Z]+(-P-[A-Z])?$/.test(ticker);
         }
 
-        document.getElementById('matrixContent').innerHTML = '<div class="loading">🧮 Calculating correlations...</div>';
-        
-        const validStocks = stocks.filter(s => appState.stockDataCache[s]);
-        appState.correlationMatrix = {};
-        
-        validStocks.forEach(stock1 => {
-            appState.correlationMatrix[stock1] = {};
-            validStocks.forEach(stock2 => {
-                if (stock1 === stock2) {
-                    appState.correlationMatrix[stock1][stock2] = 1.0;
-                } else {
-                    const { prices1, prices2 } = alignDataForCorrelation(
-                        appState.stockDataCache[stock1], 
-                        appState.stockDataCache[stock2]
-                    );
-                    const corr = calculateCorrelation(prices1, prices2);
-                    appState.correlationMatrix[stock1][stock2] = isNaN(corr) ? 0 : corr;
+        // Durum mesajlarını güncelle
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = type;
+        }
+
+        // API'den veri çekme
+        async function fetchData() {
+            if (useDemoData) {
+                renderCorrelationMatrix(demoData);
+                return;
+            }
+
+            if (!apiKey) {
+                updateStatus('Lütfen önce API anahtarını girin.', 'error');
+                return;
+            }
+
+            if (stocks.length < 2) {
+                updateStatus('Korelasyon matrisi için en az 2 hisse senedi ekleyin.', 'error');
+                return;
+            }
+
+            updateStatus('Veriler çekiliyor...', 'success');
+            const timePeriod = document.getElementById('time-period').value;
+            const symbols = stocks.join(',');
+            const url = `${API_BASE_URL}?function=ANALYTICS_FIXED_WINDOW&SYMBOLS=${symbols}&RANGE=${timePeriod}d&INTERVAL=DAILY&OHLC=close&CALCULATIONS=CORRELATION(method=PEARSON)&apikey=${apiKey}`;
+
+            try {
+                await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY)); // Rate limit için bekle
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data['Error Message']) {
+                    throw new Error(data['Error Message']);
                 }
-            });
-        });
 
-        displayMatrix();
-        updateStats();
-        updateApiStatus('online');
-        showMessage('success', `✅ Correlation matrix updated successfully! Analyzed ${validStocks.length} stocks.`);
-        
-    } catch (error) {
-        console.error('Error creating correlation matrix:', error);
-        showMessage('error', `❌ Error: ${error.message}`);
-        updateApiStatus('offline');
-    }
-}
+                if (!data['correlation']) {
+                    throw new Error('Korelasyon verisi bulunamadı.');
+                }
 
-// --- UI Rendering ---
-function displayMatrix() {
-    const allStocks = appState.preferredStocks;
-    let html = '<table class="matrix-table">';
-    
-    // Header row
-    html += '<tr><th></th>';
-    allStocks.forEach(stock => {
-        const hasData = appState.stockDataCache[stock];
-        html += `<th>${stock} ${!hasData ? '⚠️' : ''}</th>`;
-    });
-    html += '</tr>';
-    
-    // Data rows
-    allStocks.forEach(stock1 => {
-        if (!appState.correlationMatrix[stock1]) return;
-        
-        html += `<tr><th>${stock1}</th>`;
-        allStocks.forEach(stock2 => {
-            const correlation = appState.correlationMatrix[stock1]?.[stock2];
-            if (correlation === undefined) {
-                html += `<td>-</td>`;
+                renderCorrelationMatrix(data);
+            } catch (error) {
+                updateStatus(`Hata: ${error.message}`, 'error');
+            }
+        }
+
+        // Korelasyon matrisini çiz
+        function renderCorrelationMatrix(data) {
+            const table = document.getElementById('correlation-table');
+            table.innerHTML = '';
+
+            if (useDemoData) {
+                // Demo veri için basit bir korelasyon simülasyonu
+                const headers = stocks;
+                let row = '<tr><th></th>';
+                headers.forEach(stock => row += `<th>${stock}</th>`);
+                row += '</tr>';
+                table.innerHTML += row;
+
+                headers.forEach((stock1, i) => {
+                    row = `<tr><th>${stock1}</th>`;
+                    headers.forEach((stock2, j) => {
+                        const correlation = i === j ? 1 : (Math.random() * 2 - 1).toFixed(2); // Rastgele demo korelasyon
+                        row += `<td class="correlation-cell" data-pair="${stock1}-${stock2}">${correlation}</td>`;
+                    });
+                    row += '</tr>';
+                    table.innerHTML += row;
+                });
             } else {
-                const color = getCorrelationColor(correlation);
-                html += `<td class="correlation-cell" style="background-color: ${color};" 
-                        onclick="selectPair('${stock1}', '${stock2}')">
-                        ${correlation.toFixed(3)}</td>`;
+                // Gerçek API verisi
+                const correlations = data['correlation'];
+                const headers = stocks;
+                let row = '<tr><th></th>';
+                headers.forEach(stock => row += `<th>${stock}</th>`);
+                row += '</tr>';
+                table.innerHTML += row;
+
+                headers.forEach((stock1, i) => {
+                    row = `<tr><th>${stock1}</th>`;
+                    headers.forEach((stock2, j) => {
+                        const correlation = correlations[`${stock1}:${stock2}`] || 1;
+                        row += `<td class="correlation-cell" data-pair="${stock1}-${stock2}">${correlation.toFixed(2)}</td>`;
+                    });
+                    row += '</tr>';
+                    table.innerHTML += row;
+                });
             }
-        });
-        html += '</tr>';
-    });
-    
-    html += '</table>';
-    document.getElementById('matrixContent').innerHTML = html;
-}
 
-// Detailed Analysis Panel
-async function selectPair(stock1, stock2) {
-    const correlation = appState.correlationMatrix[stock1][stock2];
-    const pairAnalysisDiv = document.getElementById('pairAnalysis');
-    
-    pairAnalysisDiv.innerHTML = `
-        <div style="margin-bottom: 15px;">
-            <strong>${stock1} vs ${stock2}</strong> - Correlation: 
-            <span style="color: ${getCorrelationColor(correlation)}">${correlation.toFixed(3)}</span>
-        </div>
-        <div id="pairAnalysisContainer">
-            <div class="price-chart-container" id="priceChart">
-                <div class="loading-spinner"></div>
-            </div>
-            <div class="stock-details-container" id="stockDetails">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>`;
-
-    // Generate price chart
-    document.getElementById('priceChart').innerHTML = generatePriceChart(stock1, stock2);
-
-    // Fetch and display stock details
-    try {
-        const [details1, details2] = await Promise.all([
-            fetchStockDetails(stock1),
-            fetchStockDetails(stock2)
-        ]);
-        
-        document.getElementById('stockDetails').innerHTML = renderStockDetails(stock1, stock2, details1, details2);
-    } catch (error) {
-        document.getElementById('stockDetails').innerHTML = `
-            <div style="text-align: center; color: #ff6b6b;">
-                Error loading detailed data: ${error.message}
-            </div>`;
-    }
-}
-
-function renderStockDetails(symbol1, symbol2, details1, details2) {
-    const data1 = appState.stockDataCache[symbol1];
-    const data2 = appState.stockDataCache[symbol2];
-    
-    // Calculate 30-day high/low
-    const last30Prices1 = data1 ? data1.slice(-30).map(d => d.price) : [];
-    const last30Prices2 = data2 ? data2.slice(-30).map(d => d.price) : [];
-    
-    const formatValue = (value) => value || 'N/A';
-    
-    const metrics1 = {
-        'Current Price': formatValue(details1?.Price),
-        'Market Cap': formatValue(details1?.MarketCapitalization),
-        'P/E Ratio': formatValue(details1?.PERatio),
-        'Dividend Yield': formatValue(details1?.DividendYield ? `${(parseFloat(details1.DividendYield) * 100).toFixed(2)}%` : null),
-        'EPS (TTM)': formatValue(details1?.EPS),
-        '30d Low': last30Prices1.length > 0 ? Math.min(...last30Prices1).toFixed(2) : 'N/A',
-        '30d High': last30Prices1.length > 0 ? Math.max(...last30Prices1).toFixed(2) : 'N/A',
-    };
-    
-    const metrics2 = {
-        'Current Price': formatValue(details2?.Price),
-        'Market Cap': formatValue(details2?.MarketCapitalization),
-        'P/E Ratio': formatValue(details2?.PERatio),
-        'Dividend Yield': formatValue(details2?.DividendYield ? `${(parseFloat(details2.DividendYield) * 100).toFixed(2)}%` : null),
-        'EPS (TTM)': formatValue(details2?.EPS),
-        '30d Low': last30Prices2.length > 0 ? Math.min(...last30Prices2).toFixed(2) : 'N/A',
-        '30d High': last30Prices2.length > 0 ? Math.max(...last30Prices2).toFixed(2) : 'N/A',
-    };
-
-    const createColumn = (symbol, metrics) => `
-        <div class="details-column">
-            <h5 style="color:${symbol === symbol1 ? '#00d4ff' : '#00ff88'}; border-color:${symbol === symbol1 ? '#00d4ff' : '#00ff88'};">
-                ${symbol}
-            </h5>
-            ${Object.entries(metrics).map(([label, value]) => `
-                <div class="detail-item">
-                    <span class="label">${label}</span>
-                    <span class="value">${value}</span>
-                </div>
-            `).join('')}
-        </div>`;
-
-    return createColumn(symbol1, metrics1) + createColumn(symbol2, metrics2);
-}
-
-function generatePriceChart(stock1, stock2) {
-    const data1 = appState.stockDataCache[stock1];
-    const data2 = appState.stockDataCache[stock2];
-    
-    if (!data1 || !data2) return '<div>Price data not available for chart.</div>';
-    
-    const { prices1, prices2 } = alignDataForCorrelation(data1, data2);
-    if (prices1.length < 2) return '<div>Not enough common data points to draw chart.</div>';
-    
-    const allPrices = [...prices1, ...prices2];
-    const minPrice = Math.min(...allPrices);
-    const maxPrice = Math.max(...allPrices);
-    const priceRange = maxPrice - minPrice === 0 ? 1 : maxPrice - minPrice;
-    
-    const width = 500, height = 300, padding = 40;
-    const normalizeY = (price) => height - padding - ((price - minPrice) / priceRange) * (height - 2 * padding);
-    const normalizeX = (index) => padding + (index / (prices1.length - 1)) * (width - 2 * padding);
-    
-    const path1 = prices1.map((p, i) => `${i === 0 ? 'M' : 'L'} ${normalizeX(i)} ${normalizeY(p)}`).join(' ');
-    const path2 = prices2.map((p, i) => `${i === 0 ? 'M' : 'L'} ${normalizeX(i)} ${normalizeY(p)}`).join(' ');
-    
-    return `
-    <svg viewBox="0 0 ${width} ${height}">
-        <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="#555" />
-        <line x1="${padding}" y1="${padding}" x2="${padding}" y2="${height - padding}" stroke="#555" />
-        <path d="${path1}" fill="none" stroke="#00d4ff" stroke-width="2" />
-        <path d="${path2}" fill="none" stroke="#00ff88" stroke-width="2" />
-        <text x="${padding + 5}" y="${padding - 15}" fill="#00d4ff" font-size="12">${stock1}</text>
-        <text x="${padding + 5}" y="${padding}" fill="#00ff88" font-size="12">${stock2}</text>
-        <text x="${padding}" y="${padding - 5}" fill="#fff" font-size="10" text-anchor="middle">${maxPrice.toFixed(2)}</text>
-        <text x="${padding}" y="${height - padding + 15}" fill="#fff" font-size="10" text-anchor="middle">${minPrice.toFixed(2)}</text>
-    </svg>`;
-}
-
-function updateStats() {
-    const correlations = [];
-    const stocks = Object.keys(appState.correlationMatrix);
-    
-    stocks.forEach(s1 => {
-        stocks.forEach(s2 => {
-            if (s1 < s2) correlations.push(appState.correlationMatrix[s1][s2]);
-        });
-    });
-    
-    if (correlations.length === 0) return;
-    
-    const avg = correlations.reduce((a, b) => a + b, 0) / correlations.length;
-    const maxCorr = Math.max(...correlations);
-    const minCorr = Math.min(...correlations);
-    const strongPos = correlations.filter(c => c >= 0.7).length;
-    const strongNeg = correlations.filter(c => c <= -0.7).length;
-    
-    document.getElementById('statsContainer').innerHTML = `
-        <div class="stat-card">
-            <div class="stat-value">${avg.toFixed(3)}</div>
-            <div class="stat-label">Avg Correlation</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">${maxCorr.toFixed(3)}</div>
-            <div class="stat-label">Highest Correlation</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">${minCorr.toFixed(3)}</div>
-            <div class="stat-label">Lowest Correlation</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">${strongPos}</div>
-            <div class="stat-label">Strong Pos Pairs</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">${strongNeg}</div>
-            <div class="stat-label">Strong Neg Pairs</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">${stocks.length}</div>
-            <div class="stat-label">Analyzed Stocks</div>
-        </div>`;
-}
-
-// --- Event Handlers & Utility Functions ---
-function getCorrelationColor(v) {
-    if (v >= 0.7) return '#00b894';      // Strong positive - green
-    if (v >= 0.3) return '#6c5ce7';      // Moderate positive - purple
-    if (v >= -0.3) return '#fdcb6e';     // Weak - yellow
-    if (v >= -0.7) return '#ff7675';     // Moderate negative - light red
-    return '#ff4757';                     // Strong negative - red
-}
-
-function updateApiStatus(status) {
-    document.getElementById('apiStatus').className = `api-status status-${status}`;
-}
-
-function showMessage(type, message) {
-    const msgDiv = document.getElementById('apiMessage');
-    msgDiv.innerHTML = `<div class="${type}">${message}</div>`;
-    setTimeout(() => { msgDiv.innerHTML = ''; }, 5000);
-}
-
-function setApiKey() {
-    const apiKey = document.getElementById('apiKeyInput').value.trim();
-    if (!apiKey) {
-        showMessage('error', '❌ Please enter your Alpha Vantage API key');
-        return;
-    }
-    
-    appState.apiKey = apiKey;
-    document.getElementById('realDataBtn').disabled = false;
-    updateApiStatus('online');
-    showMessage('success', '🔓 API key set successfully! You can now use real market data.');
-}
-
-function useRealData() {
-    if (!appState.apiKey) {
-        showMessage('error', '❌ Please set your API key first');
-        return;
-    }
-    
-    appState.useDemo = false;
-    appState.isApiReady = true;
-    updateApiStatus('online');
-    showMessage('success', '🚀 Alpha Vantage API activated! Click "Refresh Data" to start analysis.');
-    document.getElementById('refreshBtn').disabled = false;
-}
-
-function useDemoData() {
-    appState.useDemo = true;
-    appState.isApiReady = true;
-    updateApiStatus('online');
-    showMessage('success', '📊 Demo data mode activated. Click "Refresh Data" to see sample analysis.');
-    document.getElementById('refreshBtn').disabled = false;
-}
-
-function addCustomStock() {
-    const ticker = document.getElementById('customTicker').value.trim().toUpperCase();
-    if (ticker && !appState.preferredStocks.includes(ticker)) {
-        appState.preferredStocks.push(ticker);
-        document.getElementById('customTicker').value = '';
-        showMessage('success', `✅ ${ticker} added to analysis list.`);
-    } else if (ticker && appState.preferredStocks.includes(ticker)) {
-        showMessage('error', `❌ ${ticker} is already in the analysis list.`);
-    } else {
-        showMessage('error', '❌ Please enter a valid ticker symbol.');
-    }
-}
-
-async function refreshMatrix() {
-    if (!appState.isApiReady) {
-        showMessage('error', '❌ Please select a data source first.');
-        return;
-    }
-    
-    document.getElementById('refreshBtn').disabled = true;
-    
-    try {
-        await createCorrelationMatrix();
-    } catch (error) {
-        console.error('Matrix refresh error:', error);
-        showMessage('error', `❌ Error refreshing matrix: ${error.message}`);
-    } finally {
-        document.getElementById('refreshBtn').disabled = false;
-    }
-}
-
-// --- Demo Data Generators ---
-function generateDemoPriceData(period) {
-    const timeSeries = [];
-    const today = new Date();
-    let price = 25 + Math.random() * 50; // Start with random price between $25-75
-    
-    for (let i = 0; i < period; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - (period - 1 - i));
-        
-        // Add some realistic price movement
-        price *= (1 + (Math.random() - 0.48) * 0.05); // ±2.5% daily movement
-        price = Math.max(5, price); // Minimum price of $5
-        
-        timeSeries.push({
-            timestamp: date.getTime(),
-            price: Math.round(price * 100) / 100
-        });
-    }
-    
-    return timeSeries;
-}
-
-function generateDemoDetails(symbol) {
-    const random = (base, spread) => (base + (Math.random() - 0.5) * spread);
-    
-    return {
-        Symbol: symbol,
-        Price: random(25, 10).toFixed(2),
-        MarketCapitalization: `${random(50, 20).toFixed(1)}B`,
-        DividendYield: (random(0.06, 0.02)).toFixed(4), // 4-8% yield typical for preferred stocks
-        PERatio: random(12, 6).toFixed(2),
-        EPS: random(1.5, 1).toFixed(2)
-    };
-}
-
-// --- Initialization ---
-document.addEventListener('DOMContentLoaded', function() {
-    // Set initial UI state
-    updateApiStatus('offline');
-    document.getElementById('refreshBtn').disabled = true;
-    document.getElementById('realDataBtn').disabled = true;
-    
-    // Add enter key support for API key input
-    document.getElementById('apiKeyInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            setApiKey();
+            // Hücrelere tıklama olayı ekle
+            document.querySelectorAll('.correlation-cell').forEach(cell => {
+                cell.addEventListener('click', () => {
+                    const pair = cell.dataset.pair;
+                    document.getElementById('pair-analysis').textContent = `Seçilen çift: ${pair}. Detaylı analiz burada gösterilecek.`;
+                });
+            });
         }
-    });
-    
-    // Add enter key support for custom ticker input
-    document.getElementById('customTicker').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            addCustomStock();
-        }
-    });
-    
-    console.log('Alpha Vantage Correlation Matrix App Initialized');
-});
-
-// --- Rate Limiting Info Display ---
-setInterval(() => {
-    if (appState.isApiReady && !appState.useDemo) {
-        const remaining = appState.maxRequestsPerMinute - appState.requestCount;
-        const resetTime = appState.lastResetTime ? new Date(appState.lastResetTime + 60000) : null;
-        
-        if (remaining < appState.maxRequestsPerMinute && resetTime) {
-            const timeUntilReset = Math.max(0, Math.ceil((resetTime.getTime() - Date.now()) / 1000));
-            if (timeUntilReset > 0) {
-                document.querySelector('.api-setup h3').innerHTML = `
-                    <span class="api-status status-loading" id="apiStatus"></span>
-                    Alpha Vantage API - ${remaining} requests remaining (resets in ${timeUntilReset}s)
-                `;
-            }
-        }
-    }
-}, 1000);
-</script>
+    </script>
 </body>
 </html>
