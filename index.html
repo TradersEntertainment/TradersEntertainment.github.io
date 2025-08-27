@@ -508,27 +508,54 @@
             const prices = [];
             let price = 25 + Math.random() * 50;
             
+            // Market trend faktörü (genel piyasa yönü)
+            const marketTrend = (Math.random() - 0.5) * 0.02; // -1% ile +1% arası
+            
             for (let i = 0; i < 60; i++) {
-                price += (Math.random() - 0.5) * 2;
-                price = Math.max(price, 10);
+                // Günlük volatilite: %0.5 - %3 arası
+                const dailyVolatility = 0.005 + Math.random() * 0.025;
+                const randomChange = (Math.random() - 0.5) * 2 * dailyVolatility;
+                
+                // Market trend etkisi + random hareket
+                const totalChange = marketTrend + randomChange;
+                price = price * (1 + totalChange);
+                
+                // Fiyatın çok düşük olmasını engelle
+                price = Math.max(price, 5);
                 prices.push(price);
             }
             
             return prices;
         }
 
+        function calculateReturns(prices) {
+            // Günlük getiri oranlarını hesapla (bugün - dün) / dün
+            const returns = [];
+            for (let i = 1; i < prices.length; i++) {
+                const return_pct = (prices[i-1] - prices[i]) / prices[i]; // Note: reversed because API returns newest first
+                returns.push(return_pct);
+            }
+            return returns;
+        }
+
         function calculateCorrelation(prices1, prices2) {
-            const n = Math.min(prices1.length, prices2.length);
+            // Fiyatları günlük getiri oranlarına çevir
+            const returns1 = calculateReturns(prices1);
+            const returns2 = calculateReturns(prices2);
+            
+            const n = Math.min(returns1.length, returns2.length);
             if (n < 2) return 0;
 
-            const mean1 = prices1.slice(0, n).reduce((a, b) => a + b) / n;
-            const mean2 = prices2.slice(0, n).reduce((a, b) => a + b) / n;
+            // Ortalama getiri oranları
+            const mean1 = returns1.slice(0, n).reduce((a, b) => a + b) / n;
+            const mean2 = returns2.slice(0, n).reduce((a, b) => a + b) / n;
 
             let num = 0, den1 = 0, den2 = 0;
             
+            // Pearson korelasyon katsayısı
             for (let i = 0; i < n; i++) {
-                const diff1 = prices1[i] - mean1;
-                const diff2 = prices2[i] - mean2;
+                const diff1 = returns1[i] - mean1;
+                const diff2 = returns2[i] - mean2;
                 
                 num += diff1 * diff2;
                 den1 += diff1 * diff1;
@@ -635,18 +662,29 @@
             selectedPair = {stock1, stock2, correlation};
             
             let analysis = `<strong>${stock1} vs ${stock2}</strong><br><br>`;
-            analysis += `Correlation Coefficient: <span style="color: ${getCorrelationColor(correlation)}; font-weight: bold;">${correlation.toFixed(3)}</span><br>`;
+            analysis += `<strong>Correlation Coefficient:</strong> <span style="color: ${getCorrelationColor(correlation)}; font-weight: bold;">${correlation.toFixed(3)}</span><br><br>`;
+            
+            analysis += `<strong>Calculation Method:</strong><br>`;
+            analysis += `• Calculates daily return percentages: (Today - Yesterday) / Yesterday<br>`;
+            analysis += `• Compares how these daily changes move together<br>`;
+            analysis += `• Uses ${document.getElementById('timePeriod').value} days of historical data<br><br>`;
             
             if (Math.abs(correlation) >= 0.7) {
-                analysis += `<span style="color: #00d4ff;">Strong ${correlation > 0 ? 'positive' : 'negative'} correlation</span><br>`;
-                analysis += `These stocks tend to move ${correlation > 0 ? 'together' : 'in opposite directions'} most of the time.`;
+                analysis += `<span style="color: #00d4ff;">💪 Strong ${correlation > 0 ? 'positive' : 'negative'} correlation</span><br>`;
+                if (correlation > 0) {
+                    analysis += `When ${stock1} goes up 1%, ${stock2} typically goes up ~${Math.abs(correlation * 100).toFixed(0)}%`;
+                } else {
+                    analysis += `When ${stock1} goes up 1%, ${stock2} typically goes down ~${Math.abs(correlation * 100).toFixed(0)}%`;
+                }
             } else if (Math.abs(correlation) >= 0.3) {
-                analysis += `<span style="color: #6c5ce7;">Moderate ${correlation > 0 ? 'positive' : 'negative'} correlation</span><br>`;
+                analysis += `<span style="color: #6c5ce7;">📊 Moderate ${correlation > 0 ? 'positive' : 'negative'} correlation</span><br>`;
                 analysis += `These stocks show ${correlation > 0 ? 'some tendency to move together' : 'some tendency to move oppositely'}.`;
             } else {
-                analysis += `<span style="color: #fdcb6e;">Weak correlation</span><br>`;
-                analysis += `These stocks show little correlation in their price movements.`;
+                analysis += `<span style="color: #fdcb6e;">🎲 Weak correlation</span><br>`;
+                analysis += `These stocks move independently - no predictable pattern.`;
             }
+            
+            analysis += `<br><br><em>Note: Correlation measures daily price change relationships, not absolute price levels.</em>`;
             
             document.getElementById('pairAnalysis').innerHTML = analysis;
         }
