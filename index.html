@@ -340,6 +340,7 @@
                 <div class="control-group">
                     <label>Time Period</label>
                     <select id="timePeriod">
+                        <option value="15">15 Days</option>
                         <option value="30">30 Days</option>
                         <option value="60" selected>60 Days</option>
                         <option value="90">90 Days</option>
@@ -546,6 +547,47 @@
             const n = Math.min(returns1.length, returns2.length);
             if (n < 2) return 0;
 
+            // Kısa dönem için weighted correlation kullan (son günler daha önemli)
+            const useWeighted = n <= 30;
+            
+            if (useWeighted) {
+                return calculateWeightedCorrelation(returns1, returns2, n);
+            } else {
+                return calculateStandardCorrelation(returns1, returns2, n);
+            }
+        }
+
+        function calculateWeightedCorrelation(returns1, returns2, n) {
+            // Son günlere daha fazla ağırlık ver
+            let weightedSum1 = 0, weightedSum2 = 0, totalWeight = 0;
+            
+            for (let i = 0; i < n; i++) {
+                const weight = Math.pow(0.9, i); // Son günler daha ağırlıklı
+                weightedSum1 += returns1[i] * weight;
+                weightedSum2 += returns2[i] * weight;
+                totalWeight += weight;
+            }
+            
+            const weightedMean1 = weightedSum1 / totalWeight;
+            const weightedMean2 = weightedSum2 / totalWeight;
+            
+            let num = 0, den1 = 0, den2 = 0;
+            
+            for (let i = 0; i < n; i++) {
+                const weight = Math.pow(0.9, i);
+                const diff1 = returns1[i] - weightedMean1;
+                const diff2 = returns2[i] - weightedMean2;
+                
+                num += diff1 * diff2 * weight;
+                den1 += diff1 * diff1 * weight;
+                den2 += diff2 * diff2 * weight;
+            }
+
+            const denominator = Math.sqrt(den1 * den2);
+            return denominator === 0 ? 0 : num / denominator;
+        }
+
+        function calculateStandardCorrelation(returns1, returns2, n) {
             // Ortalama getiri oranları
             const mean1 = returns1.slice(0, n).reduce((a, b) => a + b) / n;
             const mean2 = returns2.slice(0, n).reduce((a, b) => a + b) / n;
@@ -662,19 +704,35 @@
             selectedPair = {stock1, stock2, correlation};
             
             let analysis = `<strong>${stock1} vs ${stock2}</strong><br><br>`;
-            analysis += `<strong>Correlation Coefficient:</strong> <span style="color: ${getCorrelationColor(correlation)}; font-weight: bold;">${correlation.toFixed(3)}</span><br><br>`;
+            analysis += `<strong>Overall Correlation:</strong> <span style="color: ${getCorrelationColor(correlation)}; font-weight: bold;">${correlation.toFixed(3)}</span><br><br>`;
+            
+            // Rolling correlation analysis
+            const period = parseInt(document.getElementById('timePeriod').value);
+            let rollingInfo = '';
+            
+            if (period <= 30) {
+                rollingInfo = `<strong>⚠️ Short-term Analysis (${period} days):</strong><br>`;
+                rollingInfo += `• Uses <span style="color: #00d4ff;">weighted correlation</span> - recent days matter more<br>`;
+                rollingInfo += `• Better at catching recent trend changes<br>`;
+            } else {
+                rollingInfo = `<strong>📊 Long-term Analysis (${period} days):</strong><br>`;
+                rollingInfo += `• Uses standard correlation across full period<br>`;
+                rollingInfo += `• Shows overall relationship pattern<br>`;
+            }
+            
+            analysis += rollingInfo + '<br>';
             
             analysis += `<strong>Calculation Method:</strong><br>`;
             analysis += `• Calculates daily return percentages: (Today - Yesterday) / Yesterday<br>`;
-            analysis += `• Compares how these daily changes move together<br>`;
-            analysis += `• Uses ${document.getElementById('timePeriod').value} days of historical data<br><br>`;
+            analysis += `• Compares how these daily changes move together<br><br>`;
             
             if (Math.abs(correlation) >= 0.7) {
                 analysis += `<span style="color: #00d4ff;">💪 Strong ${correlation > 0 ? 'positive' : 'negative'} correlation</span><br>`;
                 if (correlation > 0) {
-                    analysis += `When ${stock1} goes up 1%, ${stock2} typically goes up ~${Math.abs(correlation * 100).toFixed(0)}%`;
+                    analysis += `When ${stock1} goes up 1%, ${stock2} typically goes up ~${Math.abs(correlation * 100).toFixed(0)}%<br>`;
                 } else {
-                    analysis += `When ${stock1} goes up 1%, ${stock2} typically goes down ~${Math.abs(correlation * 100).toFixed(0)}%`;
+                    analysis += `When ${stock1} goes up 1%, ${stock2} typically goes down ~${Math.abs(correlation * 100).toFixed(0)}%<br>`;
+                    analysis += `<span style="color: #ff4757;">📉 These stocks move in OPPOSITE directions!</span>`;
                 }
             } else if (Math.abs(correlation) >= 0.3) {
                 analysis += `<span style="color: #6c5ce7;">📊 Moderate ${correlation > 0 ? 'positive' : 'negative'} correlation</span><br>`;
@@ -684,7 +742,12 @@
                 analysis += `These stocks move independently - no predictable pattern.`;
             }
             
-            analysis += `<br><br><em>Note: Correlation measures daily price change relationships, not absolute price levels.</em>`;
+            if (period <= 15 && Math.abs(correlation) >= 0.5) {
+                analysis += `<br><br><span style="color: #ffa500;">⚡ Recent ${period}-day pattern detected!</span><br>`;
+                analysis += `This correlation represents very recent market behavior.`;
+            }
+            
+            analysis += `<br><br><em>💡 Tip: Try different time periods (15d vs 60d) to see how relationships change over time.</em>`;
             
             document.getElementById('pairAnalysis').innerHTML = analysis;
         }
