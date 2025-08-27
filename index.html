@@ -271,43 +271,25 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
-
-        .deployment-guide {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        
+        #pairAnalysis {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            align-items: flex-start;
         }
-
-        .deployment-guide h3 {
-            color: #00d4ff;
-            margin-bottom: 15px;
-        }
-
-        .deployment-guide ol {
-            margin-left: 20px;
-            line-height: 1.6;
-        }
-
-        .deployment-guide li {
-            margin-bottom: 10px;
-        }
-
-        @media (max-width: 768px) {
-            .control-row, .api-input {
-                flex-direction: column;
-                align-items: stretch;
+        
+        @media (max-width: 992px) {
+            #pairAnalysis {
+                grid-template-columns: 1fr;
             }
-            
-            .control-group {
-                width: 100%;
-            }
-            
-            select, input {
-                min-width: auto;
-                width: 100%;
-            }
+        }
+
+        .price-chart-container svg {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -371,266 +353,153 @@
 
         <div class="matrix-container">
             <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #ff4757;"></div>
-                    <span>Strong Negative (-1.0 to -0.7)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #ff7675;"></div>
-                    <span>Moderate Negative (-0.7 to -0.3)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #fdcb6e;"></div>
-                    <span>Weak (-0.3 to 0.3)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #6c5ce7;"></div>
-                    <span>Moderate Positive (0.3 to 0.7)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #00b894;"></div>
-                    <span>Strong Positive (0.7 to 1.0)</span>
-                </div>
+                 <div class="legend-item"><div class="legend-color" style="background: #ff4757;"></div><span>Strong Negative</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: #ff7675;"></div><span>Moderate Negative</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: #fdcb6e;"></div><span>Weak</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: #6c5ce7;"></div><span>Moderate Positive</span></div>
+                <div class="legend-item"><div class="legend-color" style="background: #00b894;"></div><span>Strong Positive</span></div>
             </div>
 
             <div id="matrixContent">
-                <div class="loading">Configure API key or use demo data to start analysis...</div>
+                <div class="loading">Select data source and click "Refresh Data" to start analysis...</div>
             </div>
         </div>
 
         <div class="info-panel">
             <h3 style="margin-bottom: 15px; color: #00d4ff;">Market Statistics</h3>
-            <div class="stats" id="statsContainer">
-                <!-- Stats will be populated here -->
-            </div>
+            <div class="stats" id="statsContainer"></div>
             
             <div style="margin-top: 25px;">
                 <h4 style="color: #00ff88; margin-bottom: 10px;">Selected Pair Analysis</h4>
                 <div id="pairAnalysis" style="color: #b8c5d6;">
-                    Click on any correlation cell to see detailed analysis
+                    Click on any correlation cell to see detailed analysis and price charts.
                 </div>
             </div>
         </div>
 
-        <div class="deployment-guide">
-            <h3>🚀 Deploy This Site for FREE</h3>
-            <p style="color: #b8c5d6; margin-bottom: 20px;">Get your own website accessible from anywhere:</p>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                <div>
-                    <h4 style="color: #00ff88; margin-bottom: 10px;">Option 1: Netlify (Recommended)</h4>
-                    <ol style="color: #b8c5d6; font-size: 0.9em;">
-                        <li>Create account at <a href="https://netlify.com" target="_blank" style="color: #00d4ff;">netlify.com</a></li>
-                        <li>Drag & drop your HTML file</li>
-                        <li>Get instant domain like: yoursite.netlify.app</li>
-                        <li>Custom domain: $12/year optional</li>
-                    </ol>
-                </div>
-                
-                <div>
-                    <h4 style="color: #6c5ce7; margin-bottom: 10px;">Option 2: Vercel</h4>
-                    <ol style="color: #b8c5d6; font-size: 0.9em;">
-                        <li>Sign up at <a href="https://vercel.com" target="_blank" style="color: #00d4ff;">vercel.com</a></li>
-                        <li>Connect your GitHub repo</li>
-                        <li>Auto-deploy on every update</li>
-                        <li>Get: yourapp.vercel.app</li>
-                    </ol>
-                </div>
-                
-                <div>
-                    <h4 style="color: #fd79a8; margin-bottom: 10px;">Option 3: GitHub Pages</h4>
-                    <ol style="color: #b8c5d6; font-size: 0.9em;">
-                        <li>Upload to GitHub repository</li>
-                        <li>Enable Pages in Settings</li>
-                        <li>Access via: username.github.io/reponame</li>
-                        <li>100% Free forever</li>
-                    </ol>
-                </div>
-            </div>
-            
-            <p style="color: #ffa500; margin-top: 20px; font-size: 0.9em;">
-                💡 <strong>Pro Tip:</strong> Save this HTML file as "index.html" and you're ready to deploy!
-            </p>
-        </div>
     </div>
 
     <script>
-        // API Configuration
-        let API_KEY = '';
-        let isApiConnected = false;
-        let useDemo = false;
+        // --- State Management ---
+        const appState = {
+            useDemo: false,
+            isApiConnected: false,
+            correlationMatrix: {},
+            stockDataCache: {},
+            preferredStocks: [
+                'BAC-PK', 'BAC-PL', 'JPM-PC', 'JPM-PD', 'WFC-PQ', 'WFC-PR',
+                'C-PN', 'GS-PK', 'MS-PI', 'USB-PH', 'PNC-PP', 'TFC-PI'
+            ]
+        };
 
-        // Sample preferred stocks
-        const preferredStocks = [
-            'BAC-PK', 'BAC-PL', 'JPM-PC', 'JPM-PD', 'WFC-PQ', 'WFC-PR',
-            'C-PN', 'GS-PK', 'MS-PI', 'USB-PH', 'PNC-PP', 'TFC-PI'
-        ];
+        // --- API & Data Fetching ---
 
-        let correlationMatrix = {};
-        let selectedPair = null;
-
-        // Alpha Vantage API functions
-        async function fetchStockData(symbol, period = '60') {
-            if (useDemo) {
-                return generateDemoStockData();
+        async function fetchStockData(symbol, period) {
+            if (appState.useDemo) {
+                return generateDemoStockData(period);
             }
             
             try {
-                // Yahoo Finance API - ücretsiz, CORS yok!
-                const yahooSymbol = symbol; // Yahoo'da da aynı format
                 const endDate = new Date();
-                const startDate = new Date(endDate - parseInt(period) * 24 * 60 * 60 * 1000 * 1.5); // Biraz fazla al
-                
+                const startDate = new Date();
+                startDate.setDate(endDate.getDate() - (parseInt(period) * 1.5)); // Fetch extra data for non-trading days
+
                 const startTimestamp = Math.floor(startDate.getTime() / 1000);
                 const endTimestamp = Math.floor(endDate.getTime() / 1000);
                 
-                // Yahoo Finance Query v8 API
-                const apiUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?period1=${startTimestamp}&period2=${endTimestamp}&interval=1d&includePrePost=false`;
+                const apiUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${startTimestamp}&period2=${endTimestamp}&interval=1d`;
                 
                 const response = await fetch(apiUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`Yahoo Finance API error: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`Yahoo API error for ${symbol}: ${response.status}`);
                 
                 const data = await response.json();
-                
-                if (!data.chart || !data.chart.result || data.chart.result.length === 0) {
-                    console.warn(`No data found for ${symbol} on Yahoo Finance`);
-                    return generateDemoStockData();
+                if (!data.chart?.result?.[0]?.timestamp) {
+                    console.warn(`No valid data for ${symbol}.`);
+                    return null;
                 }
                 
-                const result = data.chart.result[0];
-                const closePrices = result.indicators.quote[0].close;
+                const { timestamp, indicators } = data.chart.result[0];
+                const prices = indicators.quote[0].close;
                 
-                if (!closePrices || closePrices.length === 0) {
-                    console.warn(`No price data for ${symbol}`);
-                    return generateDemoStockData();
-                }
-                
-                // Null değerleri filtrele ve istenen period kadar al
-                const validPrices = closePrices
-                    .filter(price => price !== null && price !== undefined)
-                    .slice(-parseInt(period)) // Son N günü al
-                    .reverse(); // Yeniden eskiye sırala (API eskiden yeniye veriyor)
-                
-                console.log(`✅ Yahoo Finance: ${symbol} - ${validPrices.length} days fetched`);
-                return validPrices.length > 5 ? validPrices : generateDemoStockData();
-                
+                // YENİ: Tarih damgaları ile fiyatları birleştir, null olanları filtrele
+                const timeSeries = timestamp
+                    .map((ts, i) => ({
+                        timestamp: ts * 1000,
+                        price: prices[i]
+                    }))
+                    .filter(d => d.price !== null && d.price !== undefined)
+                    .slice(-parseInt(period)); // Son N günü al
+
+                console.log(`✅ Fetched ${timeSeries.length} valid data points for ${symbol}`);
+                return timeSeries;
+
             } catch (error) {
-                console.warn(`Error fetching ${symbol} from Yahoo Finance:`, error.message);
-                console.log(`📊 Using demo data for ${symbol}`);
-                return generateDemoStockData();
+                console.warn(`Error fetching ${symbol}:`, error.message);
+                return null; // YENİ: Hata durumunda null dön
             }
         }
 
-        function generateDemoStockData() {
-            const prices = [];
+        function generateDemoStockData(period) {
+            const timeSeries = [];
             let price = 25 + Math.random() * 50;
+            const today = new Date();
             
-            // Preferred stock'lar daha az volatil, daha stable
-            const baseVolatility = 0.003 + Math.random() * 0.008; // 0.3% - 1.1% günlük
-            
-            // Market trend (pref stocklar genelde birlikte hareket eder)
-            const marketTrend = (Math.random() - 0.5) * 0.01; // -0.5% ile +0.5% arası
-            
-            // Son günlerde ters hareket simülasyonu (bazı stocklar için)
-            const hasRecentInverse = Math.random() < 0.3; // %30 şans
-            const recentInverseDays = 5 + Math.floor(Math.random() * 5); // 5-10 gün
-            
-            for (let i = 0; i < 60; i++) {
-                let dailyChange = marketTrend + (Math.random() - 0.5) * baseVolatility * 2;
+            for (let i = 0; i < period; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - (period - 1 - i));
                 
-                // Son günlerde inverse hareket simülasyonu
-                if (hasRecentInverse && i < recentInverseDays) {
-                    dailyChange = -marketTrend + (Math.random() - 0.5) * baseVolatility * 1.5;
-                }
+                const dailyChange = (Math.random() - 0.48) * 0.05; // Pref stocks are less volatile
+                price *= (1 + dailyChange);
                 
-                // Interest rate sensitivity (preferred stocks hassas)
-                if (Math.random() < 0.1) { // %10 şans büyük hareket
-                    dailyChange += (Math.random() - 0.5) * 0.03; // ±1.5% spike
-                }
-                
-                price = price * (1 + dailyChange);
-                price = Math.max(price, 15); // Min $15
-                price = Math.min(price, 100); // Max $100
-                
-                prices.push(Math.round(price * 100) / 100); // 2 decimal places
+                timeSeries.push({
+                    timestamp: date.getTime(),
+                    price: Math.round(price * 100) / 100
+                });
             }
-            
-            return prices;
+            return timeSeries;
         }
 
+        // --- Calculation Engine (IMPROVED) ---
+
+        // YENİ: İki hissenin verisini ortak tarihlere göre hizalayan fonksiyon
+        function alignDataForCorrelation(data1, data2) {
+            const map1 = new Map(data1.map(d => [new Date(d.timestamp).toDateString(), d.price]));
+            const alignedPrices1 = [];
+            const alignedPrices2 = [];
+
+            for (const item2 of data2) {
+                const dateString = new Date(item2.timestamp).toDateString();
+                if (map1.has(dateString)) {
+                    alignedPrices1.push(map1.get(dateString));
+                    alignedPrices2.push(item2.price);
+                }
+            }
+            return { prices1: alignedPrices1, prices2: alignedPrices2 };
+        }
+        
         function calculateReturns(prices) {
-            // Günlük getiri oranlarını hesapla (bugün - dün) / dün
             const returns = [];
             for (let i = 1; i < prices.length; i++) {
-                const return_pct = (prices[i-1] - prices[i]) / prices[i]; // Note: reversed because API returns newest first
-                returns.push(return_pct);
+                if (prices[i] === 0) continue;
+                returns.push((prices[i] - prices[i-1]) / prices[i-1]);
             }
             return returns;
         }
-
+        
         function calculateCorrelation(prices1, prices2) {
-            // Fiyatları günlük getiri oranlarına çevir
             const returns1 = calculateReturns(prices1);
             const returns2 = calculateReturns(prices2);
-            
+
             const n = Math.min(returns1.length, returns2.length);
             if (n < 2) return 0;
 
-            // Kısa dönem için weighted correlation kullan (son günler daha önemli)
-            const useWeighted = n <= 30;
-            
-            if (useWeighted) {
-                return calculateWeightedCorrelation(returns1, returns2, n);
-            } else {
-                return calculateStandardCorrelation(returns1, returns2, n);
-            }
-        }
-
-        function calculateWeightedCorrelation(returns1, returns2, n) {
-            // Son günlere daha fazla ağırlık ver
-            let weightedSum1 = 0, weightedSum2 = 0, totalWeight = 0;
-            
-            for (let i = 0; i < n; i++) {
-                const weight = Math.pow(0.9, i); // Son günler daha ağırlıklı
-                weightedSum1 += returns1[i] * weight;
-                weightedSum2 += returns2[i] * weight;
-                totalWeight += weight;
-            }
-            
-            const weightedMean1 = weightedSum1 / totalWeight;
-            const weightedMean2 = weightedSum2 / totalWeight;
-            
-            let num = 0, den1 = 0, den2 = 0;
-            
-            for (let i = 0; i < n; i++) {
-                const weight = Math.pow(0.9, i);
-                const diff1 = returns1[i] - weightedMean1;
-                const diff2 = returns2[i] - weightedMean2;
-                
-                num += diff1 * diff2 * weight;
-                den1 += diff1 * diff1 * weight;
-                den2 += diff2 * diff2 * weight;
-            }
-
-            const denominator = Math.sqrt(den1 * den2);
-            return denominator === 0 ? 0 : num / denominator;
-        }
-
-        function calculateStandardCorrelation(returns1, returns2, n) {
-            // Ortalama getiri oranları
             const mean1 = returns1.slice(0, n).reduce((a, b) => a + b) / n;
             const mean2 = returns2.slice(0, n).reduce((a, b) => a + b) / n;
 
             let num = 0, den1 = 0, den2 = 0;
-            
-            // Pearson korelasyon katsayısı
             for (let i = 0; i < n; i++) {
                 const diff1 = returns1[i] - mean1;
                 const diff2 = returns2[i] - mean2;
-                
                 num += diff1 * diff2;
                 den1 += diff1 * diff1;
                 den2 += diff2 * diff2;
@@ -640,41 +509,45 @@
             return denominator === 0 ? 0 : num / denominator;
         }
 
+        // --- Core Application Logic ---
+
         async function createCorrelationMatrix() {
             const period = document.getElementById('timePeriod').value;
-            const stocks = [...preferredStocks];
-            const stockData = {};
+            const stocks = [...appState.preferredStocks];
             
             updateApiStatus('loading');
-            document.getElementById('matrixContent').innerHTML = '<div class="loading">Fetching market data from Yahoo Finance...</div>';
+            document.getElementById('matrixContent').innerHTML = '<div class="loading">Fetching market data...</div>';
             
             try {
-                // Fetch data for all stocks
+                // DEĞİŞTİ: Veri çekme ve önbellekleme
+                appState.stockDataCache = {};
                 for (let i = 0; i < stocks.length; i++) {
                     const symbol = stocks[i];
                     document.getElementById('matrixContent').innerHTML = 
                         `<div class="loading">📈 Fetching ${symbol}... (${i+1}/${stocks.length})</div>`;
                     
-                    stockData[symbol] = await fetchStockData(symbol, period);
-                    
-                    // Minimal delay for Yahoo Finance (çok generous)
-                    if (!useDemo && i < stocks.length - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay
-                    }
+                    appState.stockDataCache[symbol] = await fetchStockData(symbol, period);
+                    if (!appState.useDemo) await new Promise(resolve => setTimeout(resolve, 100));
                 }
 
-                // Calculate correlation matrix
+                // DEĞİŞTİ: Korelasyon matrisini senkronize veri ile hesaplama
                 document.getElementById('matrixContent').innerHTML = '<div class="loading">🧮 Calculating correlations...</div>';
                 
-                correlationMatrix = {};
-                stocks.forEach(stock1 => {
-                    correlationMatrix[stock1] = {};
-                    stocks.forEach(stock2 => {
+                const validStocks = stocks.filter(s => appState.stockDataCache[s] && appState.stockDataCache[s].length > 1);
+                appState.correlationMatrix = {};
+
+                validStocks.forEach(stock1 => {
+                    appState.correlationMatrix[stock1] = {};
+                    validStocks.forEach(stock2 => {
                         if (stock1 === stock2) {
-                            correlationMatrix[stock1][stock2] = 1.0;
+                            appState.correlationMatrix[stock1][stock2] = 1.0;
                         } else {
-                            const correlation = calculateCorrelation(stockData[stock1], stockData[stock2]);
-                            correlationMatrix[stock1][stock2] = Math.round(correlation * 1000) / 1000;
+                            const { prices1, prices2 } = alignDataForCorrelation(
+                                appState.stockDataCache[stock1], 
+                                appState.stockDataCache[stock2]
+                            );
+                            const correlation = calculateCorrelation(prices1, prices2);
+                            appState.correlationMatrix[stock1][stock2] = isNaN(correlation) ? 0 : correlation;
                         }
                     });
                 });
@@ -682,9 +555,7 @@
                 displayMatrix();
                 updateStats();
                 updateApiStatus('online');
-                
-                const dataSource = useDemo ? 'demo data' : 'Yahoo Finance API';
-                showMessage('success', `✅ Correlation matrix updated successfully using ${dataSource}!`);
+                showMessage('success', `✅ Correlation matrix updated successfully!`);
                 
             } catch (error) {
                 console.error('Error creating correlation matrix:', error);
@@ -693,28 +564,34 @@
             }
         }
 
+        // --- UI Rendering ---
+
         function displayMatrix() {
-            const stocks = Object.keys(correlationMatrix);
+            const stocksInMatrix = Object.keys(appState.correlationMatrix);
+            const allStocks = appState.preferredStocks;
             
             let html = '<table class="matrix-table">';
-            
-            // Header row
             html += '<tr><th></th>';
-            stocks.forEach(stock => {
-                html += `<th>${stock}</th>`;
+            allStocks.forEach(stock => {
+                const hasError = !appState.stockDataCache[stock];
+                html += `<th>${stock} ${hasError ? '⚠️' : ''}</th>`;
             });
             html += '</tr>';
             
-            // Data rows
-            stocks.forEach(stock1 => {
+            allStocks.forEach(stock1 => {
+                if (!appState.correlationMatrix[stock1]) return;
                 html += `<tr><th>${stock1}</th>`;
-                stocks.forEach(stock2 => {
-                    const correlation = correlationMatrix[stock1][stock2];
+                allStocks.forEach(stock2 => {
+                    if (!appState.correlationMatrix[stock1][stock2] && stock1 !== stock2) {
+                         html += `<td>-</td>`;
+                         return;
+                    }
+                    const correlation = appState.correlationMatrix[stock1][stock2];
                     const color = getCorrelationColor(correlation);
                     html += `<td class="correlation-cell" 
                             style="background-color: ${color}; color: white;" 
                             onclick="selectPair('${stock1}', '${stock2}', ${correlation})"
-                            title="Correlation: ${correlation}">
+                            title="Correlation: ${correlation.toFixed(3)}">
                             ${correlation.toFixed(3)}
                         </td>`;
                 });
@@ -724,7 +601,114 @@
             html += '</table>';
             document.getElementById('matrixContent').innerHTML = html;
         }
+        
+        // YENİ: Dinamik SVG fiyat grafiği oluşturan fonksiyon
+        function generatePriceChart(stock1, stock2) {
+            const data1 = appState.stockDataCache[stock1];
+            const data2 = appState.stockDataCache[stock2];
+            if (!data1 || !data2) return '<div>Price data not available for chart.</div>';
 
+            const { prices1, prices2 } = alignDataForCorrelation(data1, data2);
+            
+            const allPrices = [...prices1, ...prices2];
+            const minPrice = Math.min(...allPrices);
+            const maxPrice = Math.max(...allPrices);
+            const priceRange = maxPrice - minPrice;
+
+            const width = 500, height = 250, padding = 30;
+
+            const normalizeY = (price) => height - padding - ((price - minPrice) / priceRange) * (height - 2 * padding);
+            const normalizeX = (index) => padding + (index / (prices1.length - 1)) * (width - 2 * padding);
+            
+            const path1 = prices1.map((p, i) => `${i === 0 ? 'M' : 'L'} ${normalizeX(i)} ${normalizeY(p)}`).join(' ');
+            const path2 = prices2.map((p, i) => `${i === 0 ? 'M' : 'L'} ${normalizeX(i)} ${normalizeY(p)}`).join(' ');
+
+            return `
+            <div class="price-chart-container">
+                <svg viewBox="0 0 ${width} ${height}">
+                    <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="#555" />
+                    <line x1="${padding}" y1="${padding}" x2="${padding}" y2="${height - padding}" stroke="#555" />
+                    <path d="${path1}" fill="none" stroke="#00d4ff" stroke-width="2" />
+                    <path d="${path2}" fill="none" stroke="#00ff88" stroke-width="2" />
+                    <text x="${padding + 5}" y="${padding + 15}" fill="#00d4ff" font-size="12">${stock1}</text>
+                    <text x="${padding + 5}" y="${padding + 30}" fill="#00ff88" font-size="12">${stock2}</text>
+                </svg>
+            </div>
+            `;
+        }
+        
+        // DEĞİŞTİ: Analiz paneli artık grafik ve detaylı fiyat bilgisi içeriyor
+        function selectPair(stock1, stock2, correlation) {
+            const chartHtml = generatePriceChart(stock1, stock2);
+
+            const data1 = appState.stockDataCache[stock1];
+            const data2 = appState.stockDataCache[stock2];
+            
+            const getPriceInfo = (data) => {
+                if (!data || data.length < 2) return { start: 'N/A', end: 'N/A', change: 'N/A'};
+                const startPrice = data[0].price;
+                const endPrice = data[data.length - 1].price;
+                const changePct = ((endPrice - startPrice) / startPrice) * 100;
+                return {
+                    start: `$${startPrice.toFixed(2)}`,
+                    end: `$${endPrice.toFixed(2)}`,
+                    change: `${changePct.toFixed(2)}%`,
+                    color: changePct >= 0 ? '#00ff88' : '#ff4757'
+                };
+            };
+            
+            const info1 = getPriceInfo(data1);
+            const info2 = getPriceInfo(data2);
+            
+            const analysisText = `
+                <div>
+                    <strong>${stock1} vs ${stock2}</strong><br>
+                    <strong>Correlation:</strong> 
+                    <span style="color: ${getCorrelationColor(correlation)}; font-weight: bold;">${correlation.toFixed(3)}</span><br><br>
+                    
+                    <div style="font-size: 0.9em; line-height: 1.6;">
+                        <strong><span style="color:#00d4ff">${stock1}</span> Info:</strong><br>
+                        Start Price: ${info1.start}<br>
+                        End Price: ${info1.end}<br>
+                        Period Change: <strong style="color:${info1.color};">${info1.change}</strong><br><br>
+                        
+                        <strong><span style="color:#00ff88">${stock2}</span> Info:</strong><br>
+                        Start Price: ${info2.start}<br>
+                        End Price: ${info2.end}<br>
+                        Period Change: <strong style="color:${info2.color};">${info2.change}</strong><br>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('pairAnalysis').innerHTML = chartHtml + analysisText;
+        }
+
+        function updateStats() {
+            const correlations = [];
+            const stocks = Object.keys(appState.correlationMatrix);
+            
+            stocks.forEach(stock1 => {
+                stocks.forEach(stock2 => {
+                    if (stock1 < stock2) { // Avoid duplicates and self-correlation
+                        correlations.push(appState.correlationMatrix[stock1][stock2]);
+                    }
+                });
+            });
+            
+            if (correlations.length === 0) return;
+            
+            const avg = correlations.reduce((a, b) => a + b, 0) / correlations.length;
+            const statsHtml = `
+                <div class="stat-card"><div class="stat-value">${avg.toFixed(3)}</div><div class="stat-label">Average Correlation</div></div>
+                <div class="stat-card"><div class="stat-value">${Math.max(...correlations).toFixed(3)}</div><div class="stat-label">Highest Correlation</div></div>
+                <div class="stat-card"><div class="stat-value">${Math.min(...correlations).toFixed(3)}</div><div class="stat-label">Lowest Correlation</div></div>
+                <div class="stat-card"><div class="stat-value">${correlations.filter(c => c >= 0.7).length}</div><div class="stat-label">Strong Positive Pairs</div></div>
+                <div class="stat-card"><div class="stat-value">${correlations.filter(c => c <= -0.7).length}</div><div class="stat-label">Strong Negative Pairs</div></div>
+                <div class="stat-card"><div class="stat-value">${stocks.length}</div><div class="stat-label">Analyzed Stocks</div></div>
+            `;
+            document.getElementById('statsContainer').innerHTML = statsHtml;
+        }
+        
         function getCorrelationColor(value) {
             if (value >= 0.7) return '#00b894';
             if (value >= 0.3) return '#6c5ce7';
@@ -733,160 +717,51 @@
             return '#ff4757';
         }
 
-        function selectPair(stock1, stock2, correlation) {
-            selectedPair = {stock1, stock2, correlation};
-            
-            let analysis = `<strong>${stock1} vs ${stock2}</strong><br><br>`;
-            analysis += `<strong>Overall Correlation:</strong> <span style="color: ${getCorrelationColor(correlation)}; font-weight: bold;">${correlation.toFixed(3)}</span><br><br>`;
-            
-            // Rolling correlation analysis
-            const period = parseInt(document.getElementById('timePeriod').value);
-            let rollingInfo = '';
-            
-            if (period <= 30) {
-                rollingInfo = `<strong>⚠️ Short-term Analysis (${period} days):</strong><br>`;
-                rollingInfo += `• Uses <span style="color: #00d4ff;">weighted correlation</span> - recent days matter more<br>`;
-                rollingInfo += `• Better at catching recent trend changes<br>`;
-            } else {
-                rollingInfo = `<strong>📊 Long-term Analysis (${period} days):</strong><br>`;
-                rollingInfo += `• Uses standard correlation across full period<br>`;
-                rollingInfo += `• Shows overall relationship pattern<br>`;
-            }
-            
-            analysis += rollingInfo + '<br>';
-            
-            analysis += `<strong>Calculation Method:</strong><br>`;
-            analysis += `• Calculates daily return percentages: (Today - Yesterday) / Yesterday<br>`;
-            analysis += `• Compares how these daily changes move together<br><br>`;
-            
-            if (Math.abs(correlation) >= 0.7) {
-                analysis += `<span style="color: #00d4ff;">💪 Strong ${correlation > 0 ? 'positive' : 'negative'} correlation</span><br>`;
-                if (correlation > 0) {
-                    analysis += `When ${stock1} goes up 1%, ${stock2} typically goes up ~${Math.abs(correlation * 100).toFixed(0)}%<br>`;
-                } else {
-                    analysis += `When ${stock1} goes up 1%, ${stock2} typically goes down ~${Math.abs(correlation * 100).toFixed(0)}%<br>`;
-                    analysis += `<span style="color: #ff4757;">📉 These stocks move in OPPOSITE directions!</span>`;
-                }
-            } else if (Math.abs(correlation) >= 0.3) {
-                analysis += `<span style="color: #6c5ce7;">📊 Moderate ${correlation > 0 ? 'positive' : 'negative'} correlation</span><br>`;
-                analysis += `These stocks show ${correlation > 0 ? 'some tendency to move together' : 'some tendency to move oppositely'}.`;
-            } else {
-                analysis += `<span style="color: #fdcb6e;">🎲 Weak correlation</span><br>`;
-                analysis += `These stocks move independently - no predictable pattern.`;
-            }
-            
-            if (period <= 15 && Math.abs(correlation) >= 0.5) {
-                analysis += `<br><br><span style="color: #ffa500;">⚡ Recent ${period}-day pattern detected!</span><br>`;
-                analysis += `This correlation represents very recent market behavior.`;
-            }
-            
-            analysis += `<br><br><em>💡 Tip: Try different time periods (15d vs 60d) to see how relationships change over time.</em>`;
-            
-            document.getElementById('pairAnalysis').innerHTML = analysis;
-        }
-
-        function updateStats() {
-            const correlations = [];
-            const stocks = Object.keys(correlationMatrix);
-            
-            stocks.forEach(stock1 => {
-                stocks.forEach(stock2 => {
-                    if (stock1 !== stock2) {
-                        correlations.push(correlationMatrix[stock1][stock2]);
-                    }
-                });
-            });
-            
-            if (correlations.length === 0) return;
-            
-            const avgCorrelation = correlations.reduce((a, b) => a + b, 0) / correlations.length;
-            const maxCorrelation = Math.max(...correlations);
-            const minCorrelation = Math.min(...correlations);
-            const strongPositive = correlations.filter(c => c >= 0.7).length;
-            const strongNegative = correlations.filter(c => c <= -0.7).length;
-            
-            const statsHtml = `
-                <div class="stat-card">
-                    <div class="stat-value">${avgCorrelation.toFixed(3)}</div>
-                    <div class="stat-label">Average Correlation</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${maxCorrelation.toFixed(3)}</div>
-                    <div class="stat-label">Highest Correlation</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${minCorrelation.toFixed(3)}</div>
-                    <div class="stat-label">Lowest Correlation</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${strongPositive}</div>
-                    <div class="stat-label">Strong Positive Pairs</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${strongNegative}</div>
-                    <div class="stat-label">Strong Negative Pairs</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${stocks.length}</div>
-                    <div class="stat-label">Total Stocks</div>
-                </div>
-            `;
-            
-            document.getElementById('statsContainer').innerHTML = statsHtml;
-        }
-
-        function updateApiStatus(status) {
-            const statusElement = document.getElementById('apiStatus');
-            statusElement.className = `api-status status-${status}`;
-        }
-
+        // --- Event Handlers & Initializers ---
+        function updateApiStatus(status) { document.getElementById('apiStatus').className = `api-status status-${status}`; }
         function showMessage(type, message) {
-            const messageDiv = document.getElementById('apiMessage');
-            messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
-            setTimeout(() => {
-                messageDiv.innerHTML = '';
-            }, 5000);
+            const msgDiv = document.getElementById('apiMessage');
+            msgDiv.innerHTML = `<div class="${type}">${message}</div>`;
+            setTimeout(() => { msgDiv.innerHTML = ''; }, 5000);
         }
-
         function useRealData() {
-            useDemo = false;
-            isApiConnected = true;
+            appState.useDemo = false;
+            appState.isApiConnected = true;
             updateApiStatus('online');
-            showMessage('success', '🎉 Yahoo Finance API activated! Click "Refresh Data" to fetch real market data.');
+            showMessage('success', 'Yahoo Finance API activated! Click "Refresh Data".');
             document.getElementById('refreshBtn').disabled = false;
         }
-
         function useDemoData() {
-            useDemo = true;
-            isApiConnected = false;
-            updateApiStatus('loading');
-            showMessage('success', '📊 Demo data mode activated. Click "Refresh Data" to start analysis with realistic sample data.');
+            appState.useDemo = true;
+            appState.isApiConnected = true; // Allow running with demo data
+            updateApiStatus('online'); // Visually looks "online"
+            showMessage('success', 'Demo data mode activated. Click "Refresh Data".');
             document.getElementById('refreshBtn').disabled = false;
         }
-
         function addCustomStock() {
             const ticker = document.getElementById('customTicker').value.trim().toUpperCase();
-            if (ticker && !preferredStocks.includes(ticker)) {
-                preferredStocks.push(ticker);
+            if (ticker && !appState.preferredStocks.includes(ticker)) {
+                appState.preferredStocks.push(ticker);
                 document.getElementById('customTicker').value = '';
-                showMessage('success', `${ticker} added to analysis.`);
+                showMessage('success', `${ticker} added to analysis list.`);
             }
         }
-
         async function refreshMatrix() {
-            if (!isApiConnected && !useDemo) {
-                showMessage('error', 'Please configure API key or use demo data first.');
+            if (!appState.isApiConnected) {
+                showMessage('error', 'Please select a data source first.');
                 return;
             }
-            
             document.getElementById('refreshBtn').disabled = true;
             await createCorrelationMatrix();
             document.getElementById('refreshBtn').disabled = false;
         }
 
         // Initialize
-        updateApiStatus('online');
-        showMessage('success', '🎉 Yahoo Finance API ready! Choose your data source and click Refresh Data.');
+        document.addEventListener('DOMContentLoaded', () => {
+             // Deployment guide'ı kaldırdım, isterseniz geri ekleyebilirsiniz.
+            updateApiStatus('online');
+            showMessage('success', 'Yahoo Finance API ready! Choose your data source and click Refresh Data.');
+        });
     </script>
 </body>
 </html>
