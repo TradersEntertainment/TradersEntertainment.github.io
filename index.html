@@ -45,7 +45,7 @@
                 <option value="180">6 Months</option>
             </select><br>
             <label for="ticker-input">Custom Ticker</label>
-            <input type="text" id="ticker-input" placeholder="e.g. BAC-PA, MSFT">
+            <input type="text" id="ticker-input" placeholder="e.g. BAC-P-A, MSFT">
             <button id="add-stock">Add Stock</button>
             <button id="refresh-data">Refresh Data</button>
             <p id="ticker-error" class="error"></p>
@@ -98,11 +98,9 @@
         });
 
         document.getElementById('add-stock').addEventListener('click', () => {
-            let ticker = document.getElementById('ticker-input').value.trim().toUpperCase();
-            ticker = normalizeTicker(ticker); // normalize user input
-            
+            const ticker = document.getElementById('ticker-input').value.trim().toUpperCase();
             if (!isValidTicker(ticker)) {
-                document.getElementById('ticker-error').textContent = 'Geçersiz sembol formatı. Örnek: BAC-PRA, AAPL';
+                document.getElementById('ticker-error').textContent = 'Geçersiz sembol formatı. Örnek: BAC-P-A, AAPL';
                 return;
             }
             if (!stocks.includes(ticker)) {
@@ -115,18 +113,8 @@
 
         document.getElementById('refresh-data').addEventListener('click', fetchData);
 
-        // Regex: MSFT veya BAC-PRA, WFC-PRL, JPM-PRC gibi formatları kabul eder
         function isValidTicker(ticker) {
-            return /^[A-Z]+(-PR[A-Z])?$/.test(ticker);
-        }
-
-        // Kullanıcı BAC-PA yazarsa -> BAC-PRA olarak normalize eder
-        function normalizeTicker(ticker) {
-            const match = /^([A-Z]+)-P([A-Z])$/.exec(ticker);
-            if (match) {
-                return `${match[1]}-PR${match[2]}`;
-            }
-            return ticker;
+            return /^[A-Z]+(-P-[A-Z])?$/.test(ticker);
         }
 
         function updateStatus(message, type) {
