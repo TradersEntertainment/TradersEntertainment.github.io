@@ -65,20 +65,17 @@
     </div>
 
     <script>
-        // API ve durum değişkenleri
         let apiKey = '';
         let useDemoData = false;
         let stocks = [];
         const API_BASE_URL = 'https://www.alphavantage.co/query';
-        const RATE_LIMIT_DELAY = 12000; // 12 saniye (5 istek/dakika için)
+        const RATE_LIMIT_DELAY = 12000;
 
-        // Demo veri örneği
         const demoData = {
-            'BAC-P-A': { '2023-08-01': 25.5, '2023-08-02': 25.7, /* ... */ },
-            'MSFT': { '2023-08-01': 330.1, '2023-08-02': 328.9, /* ... */ }
+            'MSFT': { '2023-08-01': 330.1, '2023-08-02': 328.9, '2023-08-03': 329.5 },
+            'AAPL': { '2023-08-01': 195.2, '2023-08-02': 192.6, '2023-08-03': 191.3 }
         };
 
-        // API anahtarını aktive et
         document.getElementById('activate-api').addEventListener('click', () => {
             apiKey = document.getElementById('api-key').value.trim();
             if (!apiKey) {
@@ -88,7 +85,6 @@
             updateStatus('API anahtarı aktif edildi!', 'success');
         });
 
-        // Veri kaynağını seç
         document.getElementById('real-data').addEventListener('click', () => {
             useDemoData = false;
             updateStatus('Gerçek piyasa verileri kullanılıyor...', 'success');
@@ -98,10 +94,9 @@
         document.getElementById('demo-data').addEventListener('click', () => {
             useDemoData = true;
             updateStatus('Demo veriler kullanılıyor...', 'success');
-            renderCorrelationMatrix(demoData);
+            renderCorrelationMatrix(calculateCorrelation(demoData));
         });
 
-        // Hisse ekle
         document.getElementById('add-stock').addEventListener('click', () => {
             const ticker = document.getElementById('ticker-input').value.trim().toUpperCase();
             if (!isValidTicker(ticker)) {
@@ -116,25 +111,55 @@
             }
         });
 
-        // Verileri yenile
         document.getElementById('refresh-data').addEventListener('click', fetchData);
 
-        // Ticker formatını doğrula (örn. AAPL veya BAC-P-A)
         function isValidTicker(ticker) {
             return /^[A-Z]+(-P-[A-Z])?$/.test(ticker);
         }
 
-        // Durum mesajlarını güncelle
         function updateStatus(message, type) {
             const status = document.getElementById('status');
             status.textContent = message;
             status.className = type;
         }
 
-        // API'den veri çekme
+        async function fetchPriceData(symbol) {
+            const url = `${API_BASE_URL}?function=TIME_SERIES_DAILY&symbol=${symbol}&outputsize=compact&apikey=${apiKey}`;
+            await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data['Error Message']) throw new Error(data['Error Message']);
+            return data['Time Series (Daily)'];
+        }
+
+        function calculateCorrelation(data) {
+            const correlations = {};
+            const dates = Object.keys(data[stocks[0]] || demoData['MSFT']).sort();
+            const prices = stocks.map(stock => dates.map(date => parseFloat(data[stock]?.[date]?.['4. close'] || demoData[stock]?.[date] || 0)));
+
+            for (let i = 0; i < stocks.length; i++) {
+                for (let j = 0; j < stocks.length; j++) {
+                    const key = `${stocks[i]}:${stocks[j]}`;
+                    if (i === j) {
+                        correlations[key] = 1;
+                    } else {
+                        const x = prices[i];
+                        const y = prices[j];
+                        const meanX = x.reduce((a, b) => a + b, 0) / x.length;
+                        const meanY = y.reduce((a, b) => a + b, 0) / y.length;
+                        const cov = x.reduce((sum, xi, idx) => sum + (xi - meanX) * (y[idx] - meanY), 0) / x.length;
+                        const stdX = Math.sqrt(x.reduce((sum, xi) => sum + (xi - meanX) ** 2, 0) / x.length);
+                        const stdY = Math.sqrt(y.reduce((sum, yi) => sum + (yi - meanY) ** 2, 0) / y.length);
+                        correlations[key] = cov / (stdX * stdY) || 0;
+                    }
+                }
+            }
+            return correlations;
+        }
+
         async function fetchData() {
             if (useDemoData) {
-                renderCorrelationMatrix(demoData);
+                renderCorrelationMatrix(calculateCorrelation(demoData));
                 return;
             }
 
@@ -149,72 +174,38 @@
             }
 
             updateStatus('Veriler çekiliyor...', 'success');
-            const timePeriod = document.getElementById('time-period').value;
-            const symbols = stocks.join(',');
-            const url = `${API_BASE_URL}?function=ANALYTICS_FIXED_WINDOW&SYMBOLS=${symbols}&RANGE=${timePeriod}d&INTERVAL=DAILY&OHLC=close&CALCULATIONS=CORRELATION(method=PEARSON)&apikey=${apiKey}`;
-
             try {
-                await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY)); // Rate limit için bekle
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (data['Error Message']) {
-                    throw new Error(data['Error Message']);
+                const data = {};
+                for (const symbol of stocks) {
+                    data[symbol] = await fetchPriceData(symbol);
                 }
-
-                if (!data['correlation']) {
-                    throw new Error('Korelasyon verisi bulunamadı.');
-                }
-
-                renderCorrelationMatrix(data);
+                const correlations = calculateCorrelation(data);
+                renderCorrelationMatrix(correlations);
             } catch (error) {
                 updateStatus(`Hata: ${error.message}`, 'error');
+                console.error('API Yanıtı:', error);
             }
         }
 
-        // Korelasyon matrisini çiz
-        function renderCorrelationMatrix(data) {
+        function renderCorrelationMatrix(correlations) {
             const table = document.getElementById('correlation-table');
             table.innerHTML = '';
 
-            if (useDemoData) {
-                // Demo veri için basit bir korelasyon simülasyonu
-                const headers = stocks;
-                let row = '<tr><th></th>';
-                headers.forEach(stock => row += `<th>${stock}</th>`);
+            let row = '<tr><th></th>';
+            stocks.forEach(stock => row += `<th>${stock}</th>`);
+            row += '</tr>';
+            table.innerHTML += row;
+
+            stocks.forEach((stock1, i) => {
+                row = `<tr><th>${stock1}</th>`;
+                stocks.forEach((stock2, j) => {
+                    const correlation = correlations[`${stock1}:${stock2}`] || 0;
+                    row += `<td class="correlation-cell" data-pair="${stock1}-${stock2}">${correlation.toFixed(2)}</td>`;
+                });
                 row += '</tr>';
                 table.innerHTML += row;
+            });
 
-                headers.forEach((stock1, i) => {
-                    row = `<tr><th>${stock1}</th>`;
-                    headers.forEach((stock2, j) => {
-                        const correlation = i === j ? 1 : (Math.random() * 2 - 1).toFixed(2); // Rastgele demo korelasyon
-                        row += `<td class="correlation-cell" data-pair="${stock1}-${stock2}">${correlation}</td>`;
-                    });
-                    row += '</tr>';
-                    table.innerHTML += row;
-                });
-            } else {
-                // Gerçek API verisi
-                const correlations = data['correlation'];
-                const headers = stocks;
-                let row = '<tr><th></th>';
-                headers.forEach(stock => row += `<th>${stock}</th>`);
-                row += '</tr>';
-                table.innerHTML += row;
-
-                headers.forEach((stock1, i) => {
-                    row = `<tr><th>${stock1}</th>`;
-                    headers.forEach((stock2, j) => {
-                        const correlation = correlations[`${stock1}:${stock2}`] || 1;
-                        row += `<td class="correlation-cell" data-pair="${stock1}-${stock2}">${correlation.toFixed(2)}</td>`;
-                    });
-                    row += '</tr>';
-                    table.innerHTML += row;
-                });
-            }
-
-            // Hücrelere tıklama olayı ekle
             document.querySelectorAll('.correlation-cell').forEach(cell => {
                 cell.addEventListener('click', () => {
                     const pair = cell.dataset.pair;
