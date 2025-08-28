@@ -98,9 +98,11 @@
         });
 
         document.getElementById('add-stock').addEventListener('click', () => {
-            const ticker = document.getElementById('ticker-input').value.trim().toUpperCase();
+            let ticker = document.getElementById('ticker-input').value.trim().toUpperCase();
+            ticker = normalizeTicker(ticker); // normalize user input
+            
             if (!isValidTicker(ticker)) {
-                document.getElementById('ticker-error').textContent = 'Geçersiz sembol formatı. Örnek: BAC-PA, AAPL';
+                document.getElementById('ticker-error').textContent = 'Geçersiz sembol formatı. Örnek: BAC-PRA, AAPL';
                 return;
             }
             if (!stocks.includes(ticker)) {
@@ -113,8 +115,18 @@
 
         document.getElementById('refresh-data').addEventListener('click', fetchData);
 
+        // Regex: MSFT veya BAC-PRA, WFC-PRL, JPM-PRC gibi formatları kabul eder
         function isValidTicker(ticker) {
-            return /^[A-Z]+(-PA)?$/.test(ticker);
+            return /^[A-Z]+(-PR[A-Z])?$/.test(ticker);
+        }
+
+        // Kullanıcı BAC-PA yazarsa -> BAC-PRA olarak normalize eder
+        function normalizeTicker(ticker) {
+            const match = /^([A-Z]+)-P([A-Z])$/.exec(ticker);
+            if (match) {
+                return `${match[1]}-PR${match[2]}`;
+            }
+            return ticker;
         }
 
         function updateStatus(message, type) {
