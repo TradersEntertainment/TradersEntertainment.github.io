@@ -187,8 +187,7 @@
                 </div>
                 <div class="control-group">
                     <label>Custom Ticker</label>
-                    <input type="text" id="customTicker" placeholder="e.g., BAC-PA">
-                    <small style="color: #b8c5d6; font-size: 0.8em;">Format: SYMBOL-PA (not SYMBOL-P-A)</small>
+                    <input type="text" id="customTicker" placeholder="e.g., BAC-PK">
                 </div>
                 <button class="btn" onclick="addCustomStock()">Add Stock</button>
                 <button class="btn" id="refreshBtn" onclick="refreshMatrix()" disabled>Refresh Data</button>
@@ -227,7 +226,7 @@ const appState = {
     correlationMatrix: {},
     stockDataCache: {},
     stockDetailsCache: {},
-    preferredStocks: ['BAC-PA', 'JPM-PA', 'WFC-PA', 'C-PA', 'GS-PA', 'MS-PA', 'USB-PA', 'PNC-PA'],
+    preferredStocks: ['BAC-PK', 'JPM-PC', 'WFC-PQ', 'C-PN', 'GS-PK', 'MS-PI', 'USB-PH', 'PNC-PP'],
     requestCount: 0, // API rate limit tracking
     maxRequestsPerMinute: 5
 };
@@ -733,47 +732,17 @@ function useDemoData() {
     document.getElementById('refreshBtn').disabled = false;
 }
 
-// Preferred stock sembol formatını doğrula
-function validatePreferredStockSymbol(symbol) {
-    // Preferred stock format: BANK-PA, BANK-PB, etc.
-    const preferredStockPattern = /^[A-Z]{1,5}-P[A-Z]$/;
-    return preferredStockPattern.test(symbol);
-}
-
-// Sembol formatını otomatik düzelt
-function formatPreferredStockSymbol(input) {
-    const cleaned = input.replace(/[^A-Z-]/g, '').toUpperCase();
-    
-    // Eğer P-A formatında yazılmışsa PA'ya çevir
-    const corrected = cleaned.replace(/-P-([A-Z])/, '-P$1');
-    
-    return corrected;
-}
-
 function addCustomStock() {
-    let ticker = document.getElementById('customTicker').value.trim();
-    if (!ticker) {
-        showMessage('error', '❌ Please enter a ticker symbol.');
-        return;
-    }
-    
-    // Sembol formatını düzelt
-    ticker = formatPreferredStockSymbol(ticker);
-    
-    // Format doğrulaması
-    if (!validatePreferredStockSymbol(ticker)) {
-        showMessage('error', `❌ Invalid format! Use preferred stock format like: BAC-PA, JPM-PB, etc.`);
-        return;
-    }
-    
-    if (appState.preferredStocks.includes(ticker)) {
+    const ticker = document.getElementById('customTicker').value.trim().toUpperCase();
+    if (ticker && !appState.preferredStocks.includes(ticker)) {
+        appState.preferredStocks.push(ticker);
+        document.getElementById('customTicker').value = '';
+        showMessage('success', `✅ ${ticker} added to analysis list.`);
+    } else if (ticker && appState.preferredStocks.includes(ticker)) {
         showMessage('error', `❌ ${ticker} is already in the analysis list.`);
-        return;
+    } else {
+        showMessage('error', '❌ Please enter a valid ticker symbol.');
     }
-    
-    appState.preferredStocks.push(ticker);
-    document.getElementById('customTicker').value = '';
-    showMessage('success', `✅ ${ticker} added to analysis list.`);
 }
 
 async function refreshMatrix() {
@@ -844,3 +813,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Add enter key support for custom ticker input
+    document.getElementById('customTicker').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            addCustomStock();
+        }
+    });
+    
+    console.log('Alpha Vantage Correlation Matrix App Initialized');
+});
+
+// --- Rate Limiting Info Display ---
+setInterval(() => {
+    if (appState.isApiReady && !appState.useDemo) {
+        const remaining = appState.maxRequestsPerMinute - appState.requestCount;
+        const resetTime = appState.lastResetTime ? new Date(appState.lastResetTime + 60000) : null;
+        
+        if (remaining < appState.maxRequestsPerMinute && resetTime) {
+            const timeUntilReset = Math.max(0, Math.ceil((resetTime.getTime() - Date.now()) / 1000));
+            if (timeUntilReset > 0) {
+                document.querySelector('.api-setup h3').innerHTML = `
+                    <span class="api-status status-loading" id="apiStatus"></span>
+                    Alpha Vantage API - ${remaining} requests remaining (resets in ${timeUntilReset}s)
+                `;
+            }
+        }
+    }
+}, 1000);
+</script>
+</body>
+</html>
